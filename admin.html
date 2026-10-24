@@ -3,385 +3,731 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Aryan Recut — Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aryan Recut | Admin Dashboard</title>
+  <meta name="robots" content="noindex, nofollow">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b1020;
+      --panel: #141c30;
+      --panel2: #1b2740;
+      --text: #f4f7ff;
+      --muted: #9baac5;
+      --accent: #8b7bff;
+      --border: #2c3955;
+      --danger: #ff657a;
+      --success: #5ee0ae;
+    }
+
     * { box-sizing: border-box; }
+
     body {
-      margin: 0; padding: 24px;
-      font-family: Arial, sans-serif;
-      color: #f3f5ff; background: #080d19;
+      margin: 0;
+      background:
+        radial-gradient(ellipse at top left, #25204d 0, transparent 38%),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, system-ui, Arial, sans-serif;
+      min-height: 100vh;
     }
-    main { max-width: 950px; margin: auto; }
-    .panel {
-      background: #111a2b; border: 1px solid #293752;
-      border-radius: 14px; padding: 22px; margin: 18px 0;
-    }
-    h1 { font-size: 30px; }
-    .muted { color: #a7b5ce; line-height: 1.5; }
-    label { display: block; margin: 14px 0; color: #d5def0; }
-    input, textarea, select {
-      width: 100%; padding: 12px; margin-top: 7px;
-      border: 1px solid #34445f; border-radius: 8px;
-      background: #0a1221; color: white;
-    }
-    input[type=checkbox] { width: auto; }
+
+    button, input, textarea, select { font: inherit; }
+
     button {
-      padding: 11px 15px; margin: 4px;
-      border: 0; border-radius: 8px; cursor: pointer;
-      color: white; background: #647fff; font-weight: bold;
+      border: 0;
+      border-radius: 10px;
+      padding: 11px 15px;
+      color: white;
+      background: var(--accent);
+      cursor: pointer;
+      font-weight: 650;
     }
-    .secondary { background: #34445f; }
-    .danger { background: #9a3045; }
+
+    button:disabled { opacity: .55; cursor: wait; }
+    button.secondary { background: var(--panel2); border: 1px solid var(--border); }
+    button.danger { background: #6e2537; }
+    button.success { background: #145642; }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 12px;
+      color: var(--text);
+      background: #0d1528;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      outline: none;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--accent);
+    }
+
+    textarea { min-height: 100px; resize: vertical; }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .wrap { width: min(1100px, 94%); margin: auto; }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      padding: 22px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand { font-size: 21px; font-weight: 850; letter-spacing: -.5px; }
+    .brand span { color: var(--accent); }
+    .muted { color: var(--muted); }
+    .small { font-size: 12px; }
     .hidden { display: none !important; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .project {
-      border: 1px solid #293752; background: #0a1221;
-      padding: 15px; border-radius: 10px; margin: 12px 0;
+
+    main { padding: 30px 0 60px; }
+
+    .panel {
+      background: rgba(20, 28, 48, .94);
+      border: 1px solid var(--border);
+      border-radius: 17px;
+      padding: 22px;
+      margin-bottom: 20px;
     }
-    .status { white-space: pre-wrap; overflow-wrap: anywhere; }
-    @media(max-width:600px) {
-      body { padding: 12px; }
+
+    .login {
+      width: min(430px, 100%);
+      margin: 45px auto;
+    }
+
+    h1 { font-size: clamp(25px, 4vw, 36px); margin: 0 0 8px; }
+    h2 { font-size: 20px; margin: 0 0 18px; }
+    .field { margin-bottom: 15px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 15px;
+    }
+
+    .full { grid-column: 1 / -1; }
+    .actions { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 16px; }
+
+    #notice {
+      margin: 15px 0;
+      padding: 12px;
+      border-radius: 9px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    #notice:empty { display: none; }
+    #notice.error { background: #4a1f2d; color: #ffd6df; }
+    #notice.ok { background: #123b32; color: #c8ffeb; }
+
+    .project-list { display: grid; gap: 12px; }
+
+    .project {
+      display: grid;
+      grid-template-columns: 145px 1fr;
+      gap: 16px;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      padding: 12px;
+      background: #10182b;
+    }
+
+    .project img {
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      object-fit: cover;
+      background: var(--panel2);
+      border-radius: 8px;
+    }
+
+    .project h3 { margin: 0 0 7px; }
+    .project p { margin: 6px 0; overflow-wrap: anywhere; }
+    .tag {
+      display: inline-block;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 99px;
+      background: #283552;
+      margin-bottom: 7px;
+    }
+
+    .checkrow {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin: 14px 0;
+    }
+
+    .checkrow input { width: auto; }
+    footer { padding: 20px 0; color: var(--muted); font-size: 12px; }
+
+    @media (max-width: 650px) {
       .grid { grid-template-columns: 1fr; }
+      .project { grid-template-columns: 1fr; }
+      .project img { max-height: 210px; }
+      .topbar { align-items: flex-start; }
     }
   </style>
 </head>
+
 <body>
-<main>
-  <section id="loginScreen" class="panel">
-    <h1>Aryan Recut</h1>
-    <p class="muted">Admin login — sign in with your existing Supabase account.</p>
-    <form id="loginForm">
-      <label>Email
-        <input id="email" type="email" autocomplete="username" required>
-      </label>
-      <label>Password
-        <input id="password" type="password" autocomplete="current-password" required>
-      </label>
-      <button id="loginButton" type="submit">Sign In</button>
-    </form>
-    <p id="loginStatus" class="status"></p>
-  </section>
+  <div class="wrap">
+    <header class="topbar">
+      <div>
+        <div class="brand">ARYAN <span>RECUT</span></div>
+        <div class="muted small">Portfolio administration</div>
+      </div>
+      <button id="logoutBtn" class="secondary hidden" type="button">Log out</button>
+    </header>
 
-  <section id="dashboard" class="hidden">
-    <div class="panel">
-      <h1>Admin Dashboard</h1>
-      <p class="muted">Add, edit and manage portfolio projects.</p>
-      <button id="logoutButton" class="secondary" type="button">Log Out</button>
-    </div>
+    <main>
+      <section id="loginPanel" class="panel login">
+        <h1>Welcome back</h1>
+        <p class="muted">Sign in to manage your portfolio projects.</p>
 
-    <section class="panel">
-      <h2 id="formHeading">Add Project</h2>
-      <form id="projectForm">
-        <label>Project title *
-          <input id="title" maxlength="180" required>
-        </label>
+        <form id="loginForm">
+          <div class="field">
+            <label for="email">Email</label>
+            <input id="email" type="email" autocomplete="username"
+                   placeholder="Your admin email" required>
+          </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <input id="password" type="password"
+                   autocomplete="current-password"
+                   placeholder="Your password" required>
+          </div>
+          <button id="loginBtn" type="submit">Sign in securely</button>
+        </form>
+        <div id="loginNotice" role="status"></div>
+      </section>
 
-        <div class="grid">
-          <label>Category
-            <select id="category">
-              <option>Shorts</option>
-              <option>Gaming</option>
-              <option>Reels</option>
-              <option>Documentary</option>
-              <option>Other</option>
-            </select>
-          </label>
-          <label>Thumbnail URL
-            <input id="thumbnail" type="url" placeholder="https://...">
-          </label>
+      <section id="dashboard" class="hidden">
+        <div class="panel">
+          <h1>Admin dashboard</h1>
+          <p class="muted">Add, edit, publish, or remove your editing projects.</p>
+          <div id="notice" role="status"></div>
         </div>
 
-        <label>Video URL
-          <input id="videoUrl" type="url" placeholder="https://...">
-        </label>
-        <label>Project URL
-          <input id="projectUrl" type="url" placeholder="https://...">
-        </label>
-        <label>Description
-          <textarea id="description" rows="4" maxlength="3000"></textarea>
-        </label>
-        <label>
-          <input id="visible" type="checkbox" checked>
-          Visible on public portfolio
-        </label>
+        <section class="panel">
+          <h2 id="formHeading">Add a new project</h2>
+          <form id="projectForm">
+            <input id="projectId" type="hidden">
 
-        <button id="saveButton" type="submit">Save Project</button>
-        <button id="cancelButton" class="secondary hidden" type="button">Cancel Edit</button>
-      </form>
-      <p id="formStatus" class="status"></p>
-    </section>
+            <div class="grid">
+              <div class="field">
+                <label for="title">Project title *</label>
+                <input id="title" maxlength="150" required
+                       placeholder="e.g. Mohenjo-daro Documentary">
+              </div>
 
-    <section class="panel">
-      <h2>Saved Projects</h2>
-      <button id="refreshButton" class="secondary" type="button">Refresh</button>
-      <div id="projectList"></div>
-      <p id="listStatus" class="status"></p>
-    </section>
-  </section>
-</main>
+              <div class="field">
+                <label for="category">Category *</label>
+                <select id="category" required>
+                  <option value="Shorts">Shorts</option>
+                  <option value="Gaming">Gaming</option>
+                  <option value="Documentary">Documentary</option>
+                  <option value="Reels">Reels</option>
+                  <option value="Motion Graphics">Motion Graphics</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
 
-<script>
-  // Replace this with your real Supabase Project URL.
-  const SUPABASE_URL = "PASTE_YOUR_PROJECT_URL_HERE";
+              <div class="field full">
+                <label for="description">Description</label>
+                <textarea id="description" maxlength="3000"
+                          placeholder="Describe the editing, effects, and style."></textarea>
+              </div>
 
-  // Use the publishable key only. Never use an sb_secret_ key here.
-  const SUPABASE_PUBLISHABLE_KEY =
-    "sb_publishable_wFItCw-_qhiDEVFo93RBBQ_2uwwNrb7";
+              <div class="field full">
+                <label for="thumbnailUrl">Thumbnail image URL *</label>
+                <input id="thumbnailUrl" type="url" required
+                       placeholder="https://example.com/thumbnail.jpg">
+              </div>
 
-  // This must be the UID of your authorised Supabase user.
-  const OWNER_UID = "c9ddb0f1-c832-4ace-a0fc-528be1490bbb";
+              <div class="field">
+                <label for="videoUrl">Video URL *</label>
+                <input id="videoUrl" type="url" required
+                       placeholder="YouTube or video URL">
+              </div>
 
-  const db = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_PUBLISHABLE_KEY
-  );
+              <div class="field">
+                <label for="projectUrl">Project / portfolio link (optional)</label>
+                <input id="projectUrl" type="url"
+                       placeholder="https://example.com">
+              </div>
+            </div>
 
-  const $ = id => document.getElementById(id);
-  let editingId = null;
-  let busy = false;
+            <label class="checkrow">
+              <input id="isVisible" type="checkbox" checked>
+              Show this project publicly
+            </label>
 
-  function message(id, text) {
-    $(id).textContent = text;
-  }
+            <div class="actions">
+              <button id="saveBtn" type="submit">Save project</button>
+              <button id="cancelBtn" class="secondary hidden" type="button">
+                Cancel edit
+              </button>
+              <button id="refreshBtn" class="secondary" type="button">
+                Refresh projects
+              </button>
+            </div>
+          </form>
+        </section>
 
-  function showLogin(text = "") {
-    $("loginScreen").classList.remove("hidden");
-    $("dashboard").classList.add("hidden");
-    message("loginStatus", text);
-  }
+        <section class="panel">
+          <h2>Your projects</h2>
+          <p class="muted small">
+            Only projects allowed by your Supabase access policies can be changed here.
+          </p>
+          <div id="projectList" class="project-list">
+            <p class="muted">Loading projects…</p>
+          </div>
+        </section>
+      </section>
+    </main>
 
-  function showDashboard() {
-    $("loginScreen").classList.add("hidden");
-    $("dashboard").classList.remove("hidden");
-  }
+    <footer>Aryan Recut · Private administration page</footer>
+  </div>
 
-  async function checkOwner() {
-    const { data, error } = await db.auth.getSession();
-    const user = data?.session?.user;
+  <script>
+    "use strict";
 
-    if (error || !user) {
-      showLogin();
-      return false;
+    // Supabase project configuration
+    const SUPABASE_URL = "https://slitrpyfecoffbagzchp.supabase.co";
+    const SUPABASE_PUBLISHABLE_KEY =
+      "sb_publishable_wFItCw-_qhiDEVFo93RBBQ_2uwwNrb7";
+
+    // This UID must match the owner UID used by your Supabase SQL policy.
+    const OWNER_UID = "c9ddb0f1-c832-4ace-a0fc-528be1490bbb";
+
+    // Expected table: public.projects
+    // Expected columns: id, title, description, video_url, thumbnail_url,
+    // category, is_visible, project_url
+    const TABLE = "projects";
+
+    const $ = (id) => document.getElementById(id);
+    const loginPanel = $("loginPanel");
+    const dashboard = $("dashboard");
+    const loginNotice = $("loginNotice");
+    const notice = $("notice");
+    const loginBtn = $("loginBtn");
+    const saveBtn = $("saveBtn");
+    const projectList = $("projectList");
+
+    let supabaseClient;
+    let currentUser = null;
+    let busy = false;
+
+    function setNotice(message, isError = false) {
+      notice.textContent = message;
+      notice.className = isError ? "error" : "ok";
     }
 
-    if (user.id !== OWNER_UID) {
-      await db.auth.signOut();
-      showLogin("Access denied. This is not the owner account.");
-      return false;
+    function setLoginNotice(message, isError = true) {
+      loginNotice.textContent = message;
+      loginNotice.className = message ? (isError ? "error" : "ok") : "";
     }
 
-    showDashboard();
-    return true;
-  }
+    function setBusy(value) {
+      busy = value;
+      loginBtn.disabled = value;
+      saveBtn.disabled = value;
+      $("refreshBtn").disabled = value;
+      $("logoutBtn").disabled = value;
+    }
 
-  $("loginForm").addEventListener("submit", async event => {
-    event.preventDefault();
-    if (busy) return;
-    busy = true;
-    $("loginButton").disabled = true;
-    message("loginStatus", "Signing in...");
+    function safeHttpUrl(value, required = false) {
+      const raw = String(value || "").trim();
 
-    try {
-      const { data, error } = await db.auth.signInWithPassword({
-        email: $("email").value.trim(),
-        password: $("password").value
-      });
+      if (!raw) {
+        if (required) throw new Error("Please fill in all required URL fields.");
+        return null;
+      }
 
+      let parsed;
+      try {
+        parsed = new URL(raw);
+      } catch {
+        throw new Error("Please enter a valid URL beginning with https://");
+      }
+
+      if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+        throw new Error("Only HTTP or HTTPS links are allowed.");
+      }
+
+      return parsed.href;
+    }
+
+    function showDashboard(user) {
+      currentUser = user;
+      loginPanel.classList.add("hidden");
+      $("logoutBtn").classList.remove("hidden");
+      dashboard.classList.remove("hidden");
+    }
+
+    function showLogin() {
+      currentUser = null;
+      dashboard.classList.add("hidden");
+      $("logoutBtn").classList.add("hidden");
+      loginPanel.classList.remove("hidden");
+    }
+
+    async function requireOwner() {
+      const { data, error } = await supabaseClient.auth.getSession();
       if (error) throw error;
 
-      if (data.user.id !== OWNER_UID) {
-        await db.auth.signOut();
-        throw new Error("This account is not authorised.");
+      const user = data.session?.user;
+      if (!user) {
+        showLogin();
+        return false;
       }
 
-      $("password").value = "";
-      showDashboard();
-      await loadProjects();
-    } catch (error) {
-      message("loginStatus", "Login failed: " + error.message);
-    } finally {
-      busy = false;
-      $("loginButton").disabled = false;
-    }
-  });
-
-  $("logoutButton").addEventListener("click", async () => {
-    const { error } = await db.auth.signOut();
-    if (error) {
-      message("listStatus", error.message);
-      return;
-    }
-    resetForm();
-    $("projectList").replaceChildren();
-    showLogin("You are logged out.");
-  });
-
-  function resetForm() {
-    editingId = null;
-    $("projectForm").reset();
-    $("visible").checked = true;
-    $("formHeading").textContent = "Add Project";
-    $("saveButton").textContent = "Save Project";
-    $("cancelButton").classList.add("hidden");
-  }
-
-  $("cancelButton").addEventListener("click", resetForm);
-
-  $("projectForm").addEventListener("submit", async event => {
-    event.preventDefault();
-    if (busy || !(await checkOwner())) return;
-
-    busy = true;
-    $("saveButton").disabled = true;
-    message("formStatus", "Saving...");
-
-    const record = {
-      title: $("title").value.trim(),
-      category: $("category").value,
-      thumbnail_url: $("thumbnail").value.trim() || null,
-      video_url: $("videoUrl").value.trim() || null,
-      project_url: $("projectUrl").value.trim() || null,
-      description: $("description").value.trim() || null,
-      is_visible: $("visible").checked
-    };
-
-    try {
-      let result;
-
-      if (editingId !== null) {
-        result = await db.from("projects")
-          .update(record).eq("id", editingId).select();
-      } else {
-        result = await db.from("projects")
-          .insert(record).select();
+      if (user.id !== OWNER_UID) {
+        await supabaseClient.auth.signOut();
+        showLogin();
+        setLoginNotice("This account is not authorized to administer this portfolio.");
+        return false;
       }
 
-      if (result.error) throw result.error;
+      showDashboard(user);
+      return true;
+    }
 
-      if (!result.data || result.data.length === 0) {
-        throw new Error("No row saved. Check your RLS policies and table columns.");
+    async function loadProjects() {
+      if (busy || !currentUser) return;
+
+      projectList.replaceChildren();
+      const loading = document.createElement("p");
+      loading.className = "muted";
+      loading.textContent = "Loading projects…";
+      projectList.append(loading);
+
+      const { data, error } = await supabaseClient
+        .from(TABLE)
+        .select("*")
+        .order("id", { ascending: false });
+
+      if (error) {
+        projectList.replaceChildren();
+        setNotice(
+          "Could not load projects: " + error.message +
+          "\nCheck your table columns and Supabase RLS policies.",
+          true
+        );
+        return;
       }
 
-      resetForm();
-      message("formStatus", "Project saved successfully!");
-      await loadProjects();
-    } catch (error) {
-      message("formStatus", "Save failed: " + error.message);
-    } finally {
-      busy = false;
-      $("saveButton").disabled = false;
-    }
-  });
+      projectList.replaceChildren();
 
-  function addText(parent, tag, text, className = "") {
-    const element = document.createElement(tag);
-    element.textContent = text || "";
-    if (className) element.className = className;
-    parent.appendChild(element);
-    return element;
-  }
+      if (!data || data.length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "muted";
+        empty.textContent = "No projects yet. Add your first project above.";
+        projectList.append(empty);
+        return;
+      }
 
-  function editProject(project) {
-    editingId = project.id;
-    $("title").value = project.title || "";
-    $("category").value = project.category || "Other";
-    $("thumbnail").value = project.thumbnail_url || "";
-    $("videoUrl").value = project.video_url || "";
-    $("projectUrl").value = project.project_url || "";
-    $("description").value = project.description || "";
-    $("visible").checked = project.is_visible === true;
-
-    $("formHeading").textContent = "Edit Project";
-    $("saveButton").textContent = "Update Project";
-    $("cancelButton").classList.remove("hidden");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  async function deleteProject(project) {
-    if (!(await checkOwner())) return;
-    if (!confirm('Delete "' + project.title + '" permanently?')) return;
-
-    message("listStatus", "Deleting...");
-
-    const { data, error } = await db.from("projects")
-      .delete().eq("id", project.id).select("id");
-
-    if (error) {
-      message("listStatus", "Delete failed: " + error.message);
-      return;
-    }
-
-    if (!data || data.length === 0) {
-      message("listStatus", "Nothing deleted. Check RLS policies.");
-      return;
-    }
-
-    if (editingId === project.id) resetForm();
-    message("listStatus", "Project deleted.");
-    await loadProjects();
-  }
-
-  async function loadProjects() {
-    if (!(await checkOwner())) return;
-    message("listStatus", "Loading projects...");
-
-    const { data, error } = await db.from("projects")
-      .select("id,title,category,thumbnail_url,video_url,project_url,description,is_visible,created_at")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      message("listStatus", "Load failed: " + error.message);
-      return;
-    }
-
-    const list = $("projectList");
-    list.replaceChildren();
-
-    if (!data || data.length === 0) {
-      addText(list, "p", "No projects saved yet.", "muted");
-    } else {
       for (const project of data) {
-        const card = document.createElement("article");
-        card.className = "project";
-        addText(card, "h3", project.title);
-        addText(card, "p", "Category: " + (project.category || "Other"));
-        addText(card, "p", project.description || "No description", "muted");
-        addText(card, "p", project.is_visible ? "Publicly visible" : "Hidden");
+        projectList.append(makeProjectCard(project));
+      }
 
-        const edit = addText(card, "button", "Edit");
-        edit.type = "button";
-        edit.addEventListener("click", () => editProject(project));
+      setNotice("Projects loaded successfully.");
+    }
 
-        const del = addText(card, "button", "Delete", "danger");
-        del.type = "button";
-        del.addEventListener("click", () => deleteProject(project));
+    function makeProjectCard(project) {
+      const card = document.createElement("article");
+      card.className = "project";
 
-        list.appendChild(card);
+      const img = document.createElement("img");
+      img.alt = project.title || "Project thumbnail";
+      img.loading = "lazy";
+      img.referrerPolicy = "no-referrer";
+      img.src = project.thumbnail_url || "";
+      img.onerror = () => {
+        img.removeAttribute("src");
+        img.alt = "Thumbnail unavailable";
+      };
+
+      const body = document.createElement("div");
+
+      const tag = document.createElement("span");
+      tag.className = "tag";
+      tag.textContent = project.category || "Other";
+
+      const title = document.createElement("h3");
+      title.textContent = project.title || "Untitled project";
+
+      const description = document.createElement("p");
+      description.className = "muted small";
+      description.textContent = project.description || "No description.";
+
+      const visibility = document.createElement("p");
+      visibility.className = "small";
+      visibility.textContent = project.is_visible
+        ? "● Publicly visible"
+        : "● Hidden from public";
+
+      const video = document.createElement("a");
+      video.href = project.video_url || "#";
+      video.target = "_blank";
+      video.rel = "noopener noreferrer";
+      video.textContent = "Open video";
+      video.className = "small";
+
+      const actions = document.createElement("div");
+      actions.className = "actions";
+
+      const edit = document.createElement("button");
+      edit.type = "button";
+      edit.className = "secondary";
+      edit.textContent = "Edit";
+      edit.addEventListener("click", () => editProject(project));
+
+      const toggle = document.createElement("button");
+      toggle.type = "button";
+      toggle.className = "success";
+      toggle.textContent = project.is_visible ? "Hide" : "Publish";
+      toggle.addEventListener("click", () => toggleVisibility(project));
+
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "danger";
+      remove.textContent = "Delete";
+      remove.addEventListener("click", () => deleteProject(project));
+
+      actions.append(edit, toggle, remove);
+      body.append(tag, title, description, visibility, video, actions);
+      card.append(img, body);
+      return card;
+    }
+
+    function editProject(project) {
+      $("projectId").value = String(project.id ?? "");
+      $("title").value = project.title || "";
+      $("category").value = project.category || "Other";
+      $("description").value = project.description || "";
+      $("thumbnailUrl").value = project.thumbnail_url || "";
+      $("videoUrl").value = project.video_url || "";
+      $("projectUrl").value = project.project_url || "";
+      $("isVisible").checked = Boolean(project.is_visible);
+
+      $("formHeading").textContent = "Edit project";
+      saveBtn.textContent = "Update project";
+      $("cancelBtn").classList.remove("hidden");
+      $("projectForm").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function resetForm() {
+      $("projectForm").reset();
+      $("projectId").value = "";
+      $("isVisible").checked = true;
+      $("formHeading").textContent = "Add a new project";
+      saveBtn.textContent = "Save project";
+      $("cancelBtn").classList.add("hidden");
+    }
+
+    async function saveProject(event) {
+      event.preventDefault();
+      if (busy || !currentUser) return;
+
+      setBusy(true);
+
+      try {
+        const title = $("title").value.trim();
+        if (!title) throw new Error("Project title is required.");
+
+        const record = {
+          title,
+          category: $("category").value,
+          description: $("description").value.trim(),
+          thumbnail_url: safeHttpUrl($("thumbnailUrl").value, true),
+          video_url: safeHttpUrl($("videoUrl").value, true),
+          project_url: safeHttpUrl($("projectUrl").value, false),
+          is_visible: $("isVisible").checked
+        };
+
+        const id = $("projectId").value.trim();
+
+        let result;
+        if (id) {
+          result = await supabaseClient
+            .from(TABLE)
+            .update(record)
+            .eq("id", id)
+            .select()
+            .single();
+        } else {
+          // Works with UUID or text ID columns that accept UUID strings.
+          record.id = crypto.randomUUID();
+          result = await supabaseClient
+            .from(TABLE)
+            .insert(record)
+            .select()
+            .single();
+        }
+
+        if (result.error) throw result.error;
+
+        resetForm();
+        setNotice("Project saved successfully.");
+        await loadProjects();
+      } catch (error) {
+        setNotice(
+          "Could not save project: " + (error.message || "Unknown error") +
+          "\nIf the message mentions a missing column, check the projects table schema.",
+          true
+        );
+      } finally {
+        setBusy(false);
       }
     }
 
-    message("listStatus", (data || []).length + " project(s) loaded.");
-  }
+    async function toggleVisibility(project) {
+      if (busy || !currentUser) return;
 
-  $("refreshButton").addEventListener("click", loadProjects);
+      setBusy(true);
+      try {
+        const { error } = await supabaseClient
+          .from(TABLE)
+          .update({ is_visible: !project.is_visible })
+          .eq("id", project.id);
 
-  db.auth.onAuthStateChange((event, session) => {
-    if (event === "SIGNED_OUT" || !session) showLogin();
-  });
-
-  (async function start() {
-    if (
-      SUPABASE_URL === "PASTE_YOUR_PROJECT_URL_HERE" ||
-      !SUPABASE_URL.startsWith("https://")
-    ) {
-      showLogin("Setup needed: add your Supabase Project URL in the code.");
-      return;
+        if (error) throw error;
+        setNotice(project.is_visible ? "Project hidden." : "Project published.");
+        await loadProjects();
+      } catch (error) {
+        setNotice("Could not change visibility: " + error.message, true);
+      } finally {
+        setBusy(false);
+      }
     }
 
-    if (await checkOwner()) await loadProjects();
-  })();
-</script>
+    async function deleteProject(project) {
+      if (busy || !currentUser) return;
+
+      if (!confirm('Delete "' + (project.title || "this project") + '" permanently?')) {
+        return;
+      }
+
+      setBusy(true);
+      try {
+        const { error } = await supabaseClient
+          .from(TABLE)
+          .delete()
+          .eq("id", project.id);
+
+        if (error) throw error;
+        resetForm();
+        setNotice("Project deleted.");
+        await loadProjects();
+      } catch (error) {
+        setNotice("Could not delete project: " + error.message, true);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    async function login(event) {
+      event.preventDefault();
+      if (busy) return;
+
+      setBusy(true);
+      setLoginNotice("");
+
+      try {
+        const email = $("email").value.trim();
+        const password = $("password").value;
+
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+          email,
+          password
+        });
+
+        if (error) throw error;
+
+        if (!data.user || data.user.id !== OWNER_UID) {
+          await supabaseClient.auth.signOut();
+          throw new Error("This account is not the configured portfolio owner.");
+        }
+
+        showDashboard(data.user);
+        setLoginNotice("", false);
+        await loadProjects();
+      } catch (error) {
+        setLoginNotice("Sign-in failed: " + (error.message || "Unknown error"));
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    async function logout() {
+      if (busy) return;
+
+      setBusy(true);
+      try {
+        const { error } = await supabaseClient.auth.signOut();
+        if (error) throw error;
+
+        showLogin();
+        setLoginNotice("You have signed out.", false);
+      } catch (error) {
+        setNotice("Could not sign out: " + error.message, true);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    async function start() {
+      if (!window.supabase || !window.supabase.createClient) {
+        setLoginNotice("Supabase library did not load. Refresh and try again.");
+        return;
+      }
+
+      supabaseClient = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_PUBLISHABLE_KEY,
+        {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true
+          }
+        }
+      );
+
+      $("loginForm").addEventListener("submit", login);
+      $("projectForm").addEventListener("submit", saveProject);
+      $("cancelBtn").addEventListener("click", resetForm);
+      $("refreshBtn").addEventListener("click", loadProjects);
+      $("logoutBtn").addEventListener("click", logout);
+
+      supabaseClient.auth.onAuthStateChange((_event, session) => {
+        if (session?.user && session.user.id === OWNER_UID) {
+          showDashboard(session.user);
+        } else if (!session) {
+          showLogin();
+        }
+      });
+
+      try {
+        const allowed = await requireOwner();
+        if (allowed) await loadProjects();
+      } catch (error) {
+        setLoginNotice("Could not check your session: " + error.message);
+      }
+    }
+
+    start();
+  </script>
 </body>
 </html>
