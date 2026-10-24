@@ -1,12 +1,387 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Portfolio Admin | Aryan Singh</title><style>
-:root{--bg:#070a11;--line:#263954;--text:#eef4ff;--muted:#9aabc3;--cyan:#73dcff}*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 80% 0,#14294e,transparent 38%),var(--bg);color:var(--text);font:15px/1.5 system-ui,Arial}.wrap{width:min(1050px,94%);margin:auto}.top{padding:25px 0;display:flex;justify-content:space-between;align-items:center;gap:12px}.eyebrow{color:var(--cyan);letter-spacing:2px;text-transform:uppercase;font-size:11px;font-weight:800}h1{margin:4px 0;font-size:30px}p{color:var(--muted)}a{color:#b5d7ff}.btn{border:1px solid #355174;border-radius:9px;padding:10px 14px;background:#101e32;color:white;font-weight:700;cursor:pointer;text-decoration:none}.primary{background:linear-gradient(120deg,#3475ed,#4b9fff);border:0}.layout{display:grid;grid-template-columns:200px 1fr;gap:16px}.side,.panel{background:#0b1220;border:1px solid var(--line);border-radius:15px;padding:16px}.side button{display:block;width:100%;text-align:left;border:1px solid transparent;background:transparent;color:#c6d5e9;border-radius:8px;padding:10px;cursor:pointer;margin:4px 0}.side button.active,.side button:hover{background:#172e50;border-color:#2b4b77}.tab{display:none}.tab.active{display:block}.form{display:grid;grid-template-columns:1fr 1fr;gap:12px}.form label{display:grid;gap:6px;color:#c4d0e0;font-size:13px}.full{grid-column:1/-1}input,select,textarea{width:100%;padding:11px;background:#080f1b;border:1px solid #2a3c56;border-radius:9px;color:white;font:inherit}textarea{min-height:90px}.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.list{display:grid;gap:9px}.item{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px;border:1px solid #243650;border-radius:10px}.item small{display:block;color:var(--muted)}.danger{border-color:#78414b;color:#ffb9c0}.note{background:#0d1b30;border-left:3px solid #478cff;padding:12px;margin-bottom:16px;color:#c6d7ef;font-size:13px}.status{color:#90e3bd}@media(max-width:700px){.layout{grid-template-columns:1fr}.side{display:grid;grid-template-columns:1fr 1fr}.form{grid-template-columns:1fr}.full{grid-column:auto}.top{align-items:flex-start;flex-direction:column}}
-</style></head><body><div class="wrap"><header class="top"><div><div class="eyebrow">Private workspace</div><h1>Portfolio Admin</h1><p style="margin:0">Manage your gallery and showreel.</p></div><a class="btn" href="index.html">← View website</a></header>
-<div class="note"><b>Important:</b> This starter version saves in this browser only. It is not connected to Supabase and has no secure login yet, so it will not sync across devices or visitors. We must connect a database and authentication before treating this as a real admin panel.</div>
-<div class="layout"><aside class="side"><button class="active" data-tab="projects">Projects</button><button data-tab="showreel">Showreel</button><button data-tab="contact">Contact details</button></aside><main>
-<section class="panel tab active" id="projects"><div class="eyebrow">Work gallery</div><h2>Add or edit project</h2><form id="form" class="form"><input type="hidden" name="id"><label>Project title<input name="title" required placeholder="Project name"></label><label>Niche<select name="category"><option>YouTube Videos</option><option>Shorts / Reels</option><option>Gaming</option><option>Entertainment</option><option>Documentary</option><option>Other</option></select></label><label class="full">Thumbnail image URL<input name="thumbnail" placeholder="Optional image URL"></label><label>Video URL (MP4 or YouTube)<input name="videoUrl" placeholder="Video link"></label><label>Project / YouTube link<input name="projectUrl" placeholder="Optional"></label><label class="full">Description<textarea name="description"></textarea></label><div class="full row"><button class="btn primary">Save project</button><button class="btn" type="button" id="clear">Clear form</button></div></form><hr style="border-color:#263954;margin:24px 0"><h3>Saved projects</h3><div class="list" id="list"></div></section>
-<section class="panel tab" id="showreel"><div class="eyebrow">Featured video</div><h2>Showreel URL</h2><form id="reelform"><label>Paste a YouTube or direct video URL<input id="reelurl" placeholder="https://..."></label><div class="row"><button class="btn primary">Save showreel</button><button type="button" class="btn" id="clearreel">Clear</button></div></form><p id="reelstatus" class="status"></p></section>
-<section class="panel tab" id="contact"><div class="eyebrow">Contact links</div><h2>Current contact details</h2><p>Email</p><input readonly value="bishtaryan333@gmail.com"><p>Telegram</p><input readonly value="https://t.me/Aryan13841754"><p>YouTube</p><input readonly value="https://youtube.com/@editflow_112"><p>To change these later, update the main page contact links.</p></section>
-</main></div></div>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aryan Recut — Admin</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 24px;
+      font-family: Arial, sans-serif;
+      color: #f3f5ff; background: #080d19;
+    }
+    main { max-width: 950px; margin: auto; }
+    .panel {
+      background: #111a2b; border: 1px solid #293752;
+      border-radius: 14px; padding: 22px; margin: 18px 0;
+    }
+    h1 { font-size: 30px; }
+    .muted { color: #a7b5ce; line-height: 1.5; }
+    label { display: block; margin: 14px 0; color: #d5def0; }
+    input, textarea, select {
+      width: 100%; padding: 12px; margin-top: 7px;
+      border: 1px solid #34445f; border-radius: 8px;
+      background: #0a1221; color: white;
+    }
+    input[type=checkbox] { width: auto; }
+    button {
+      padding: 11px 15px; margin: 4px;
+      border: 0; border-radius: 8px; cursor: pointer;
+      color: white; background: #647fff; font-weight: bold;
+    }
+    .secondary { background: #34445f; }
+    .danger { background: #9a3045; }
+    .hidden { display: none !important; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .project {
+      border: 1px solid #293752; background: #0a1221;
+      padding: 15px; border-radius: 10px; margin: 12px 0;
+    }
+    .status { white-space: pre-wrap; overflow-wrap: anywhere; }
+    @media(max-width:600px) {
+      body { padding: 12px; }
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <section id="loginScreen" class="panel">
+    <h1>Aryan Recut</h1>
+    <p class="muted">Admin login — sign in with your existing Supabase account.</p>
+    <form id="loginForm">
+      <label>Email
+        <input id="email" type="email" autocomplete="username" required>
+      </label>
+      <label>Password
+        <input id="password" type="password" autocomplete="current-password" required>
+      </label>
+      <button id="loginButton" type="submit">Sign In</button>
+    </form>
+    <p id="loginStatus" class="status"></p>
+  </section>
+
+  <section id="dashboard" class="hidden">
+    <div class="panel">
+      <h1>Admin Dashboard</h1>
+      <p class="muted">Add, edit and manage portfolio projects.</p>
+      <button id="logoutButton" class="secondary" type="button">Log Out</button>
+    </div>
+
+    <section class="panel">
+      <h2 id="formHeading">Add Project</h2>
+      <form id="projectForm">
+        <label>Project title *
+          <input id="title" maxlength="180" required>
+        </label>
+
+        <div class="grid">
+          <label>Category
+            <select id="category">
+              <option>Shorts</option>
+              <option>Gaming</option>
+              <option>Reels</option>
+              <option>Documentary</option>
+              <option>Other</option>
+            </select>
+          </label>
+          <label>Thumbnail URL
+            <input id="thumbnail" type="url" placeholder="https://...">
+          </label>
+        </div>
+
+        <label>Video URL
+          <input id="videoUrl" type="url" placeholder="https://...">
+        </label>
+        <label>Project URL
+          <input id="projectUrl" type="url" placeholder="https://...">
+        </label>
+        <label>Description
+          <textarea id="description" rows="4" maxlength="3000"></textarea>
+        </label>
+        <label>
+          <input id="visible" type="checkbox" checked>
+          Visible on public portfolio
+        </label>
+
+        <button id="saveButton" type="submit">Save Project</button>
+        <button id="cancelButton" class="secondary hidden" type="button">Cancel Edit</button>
+      </form>
+      <p id="formStatus" class="status"></p>
+    </section>
+
+    <section class="panel">
+      <h2>Saved Projects</h2>
+      <button id="refreshButton" class="secondary" type="button">Refresh</button>
+      <div id="projectList"></div>
+      <p id="listStatus" class="status"></p>
+    </section>
+  </section>
+</main>
+
 <script>
-const K='aryanPortfolioProjects',seed=[{id:'s1',title:'YouTube Video Edit',category:'YouTube Videos',description:'Sample slot — replace with your own work.',thumbnail:'',videoUrl:'',projectUrl:''},{id:'s2',title:'Short-Form Storytelling',category:'Shorts / Reels',description:'Sample slot for a vertical short or Reel.',thumbnail:'',videoUrl:'',projectUrl:''},{id:'s3',title:'Gaming Intro',category:'Gaming',description:'Sample slot for a gaming intro.',thumbnail:'',videoUrl:'',projectUrl:''},{id:'s4',title:'Entertainment Edit',category:'Entertainment',description:'Sample slot for entertainment edits.',thumbnail:'',videoUrl:'',projectUrl:''}];function all(){try{let x=JSON.parse(localStorage.getItem(K)||'null');return Array.isArray(x)?x:seed}catch(e){return seed}}function save(x){localStorage.setItem(K,JSON.stringify(x));draw()}function draw(){let l=document.getElementById('list');l.innerHTML='';all().forEach(x=>{let d=document.createElement('div');d.className='item';let info=document.createElement('div');info.innerHTML='<b></b><small></small>';info.querySelector('b').textContent=x.title;info.querySelector('small').textContent=x.category;let c=document.createElement('div');c.className='row';c.style.marginTop='0';let ed=document.createElement('button');ed.className='btn';ed.textContent='Edit';ed.onclick=()=>{Object.keys(x).forEach(k=>{if(document.getElementById('form').elements[k])document.getElementById('form').elements[k].value=x[k]||''});document.getElementById('form').scrollIntoView({behavior:'smooth'})};let de=document.createElement('button');de.className='btn danger';de.textContent='Delete';de.onclick=()=>{if(confirm('Delete this project?'))save(all().filter(y=>y.id!==x.id))};c.append(ed,de);d.append(info,c);l.append(d)})}function clear(){document.getElementById('form').reset();document.querySelector('#form [name=id]').value=''}document.getElementById('form').onsubmit=e=>{e.preventDefault();let x=Object.fromEntries(new FormData(e.target).entries()),a=all();x.id=x.id||'p'+Date.now();let i=a.findIndex(y=>y.id===x.id);if(i<0)a.unshift(x);else a[i]=x;save(a);clear();alert('Saved in this browser.')};document.getElementById('clear').onclick=clear;document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(b.dataset.tab).classList.add('active')});document.getElementById('reelurl').value=localStorage.getItem('aryanShowreelUrl')||'';document.getElementById('reelform').onsubmit=e=>{e.preventDefault();localStorage.setItem('aryanShowreelUrl',document.getElementById('reelurl').value.trim());document.getElementById('reelstatus').textContent='Saved in this browser.'};document.getElementById('clearreel').onclick=()=>{localStorage.removeItem('aryanShowreelUrl');document.getElementById('reelurl').value='';document.getElementById('reelstatus').textContent='Cleared.'};draw();
-</script></body></html>
+  // Replace this with your real Supabase Project URL.
+  const SUPABASE_URL = "PASTE_YOUR_PROJECT_URL_HERE";
+
+  // Use the publishable key only. Never use an sb_secret_ key here.
+  const SUPABASE_PUBLISHABLE_KEY =
+    "sb_publishable_wFItCw-_qhiDEVFo93RBBQ_2uwwNrb7";
+
+  // This must be the UID of your authorised Supabase user.
+  const OWNER_UID = "c9ddb0f1-c832-4ace-a0fc-528be1490bbb";
+
+  const db = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+  );
+
+  const $ = id => document.getElementById(id);
+  let editingId = null;
+  let busy = false;
+
+  function message(id, text) {
+    $(id).textContent = text;
+  }
+
+  function showLogin(text = "") {
+    $("loginScreen").classList.remove("hidden");
+    $("dashboard").classList.add("hidden");
+    message("loginStatus", text);
+  }
+
+  function showDashboard() {
+    $("loginScreen").classList.add("hidden");
+    $("dashboard").classList.remove("hidden");
+  }
+
+  async function checkOwner() {
+    const { data, error } = await db.auth.getSession();
+    const user = data?.session?.user;
+
+    if (error || !user) {
+      showLogin();
+      return false;
+    }
+
+    if (user.id !== OWNER_UID) {
+      await db.auth.signOut();
+      showLogin("Access denied. This is not the owner account.");
+      return false;
+    }
+
+    showDashboard();
+    return true;
+  }
+
+  $("loginForm").addEventListener("submit", async event => {
+    event.preventDefault();
+    if (busy) return;
+    busy = true;
+    $("loginButton").disabled = true;
+    message("loginStatus", "Signing in...");
+
+    try {
+      const { data, error } = await db.auth.signInWithPassword({
+        email: $("email").value.trim(),
+        password: $("password").value
+      });
+
+      if (error) throw error;
+
+      if (data.user.id !== OWNER_UID) {
+        await db.auth.signOut();
+        throw new Error("This account is not authorised.");
+      }
+
+      $("password").value = "";
+      showDashboard();
+      await loadProjects();
+    } catch (error) {
+      message("loginStatus", "Login failed: " + error.message);
+    } finally {
+      busy = false;
+      $("loginButton").disabled = false;
+    }
+  });
+
+  $("logoutButton").addEventListener("click", async () => {
+    const { error } = await db.auth.signOut();
+    if (error) {
+      message("listStatus", error.message);
+      return;
+    }
+    resetForm();
+    $("projectList").replaceChildren();
+    showLogin("You are logged out.");
+  });
+
+  function resetForm() {
+    editingId = null;
+    $("projectForm").reset();
+    $("visible").checked = true;
+    $("formHeading").textContent = "Add Project";
+    $("saveButton").textContent = "Save Project";
+    $("cancelButton").classList.add("hidden");
+  }
+
+  $("cancelButton").addEventListener("click", resetForm);
+
+  $("projectForm").addEventListener("submit", async event => {
+    event.preventDefault();
+    if (busy || !(await checkOwner())) return;
+
+    busy = true;
+    $("saveButton").disabled = true;
+    message("formStatus", "Saving...");
+
+    const record = {
+      title: $("title").value.trim(),
+      category: $("category").value,
+      thumbnail_url: $("thumbnail").value.trim() || null,
+      video_url: $("videoUrl").value.trim() || null,
+      project_url: $("projectUrl").value.trim() || null,
+      description: $("description").value.trim() || null,
+      is_visible: $("visible").checked
+    };
+
+    try {
+      let result;
+
+      if (editingId !== null) {
+        result = await db.from("projects")
+          .update(record).eq("id", editingId).select();
+      } else {
+        result = await db.from("projects")
+          .insert(record).select();
+      }
+
+      if (result.error) throw result.error;
+
+      if (!result.data || result.data.length === 0) {
+        throw new Error("No row saved. Check your RLS policies and table columns.");
+      }
+
+      resetForm();
+      message("formStatus", "Project saved successfully!");
+      await loadProjects();
+    } catch (error) {
+      message("formStatus", "Save failed: " + error.message);
+    } finally {
+      busy = false;
+      $("saveButton").disabled = false;
+    }
+  });
+
+  function addText(parent, tag, text, className = "") {
+    const element = document.createElement(tag);
+    element.textContent = text || "";
+    if (className) element.className = className;
+    parent.appendChild(element);
+    return element;
+  }
+
+  function editProject(project) {
+    editingId = project.id;
+    $("title").value = project.title || "";
+    $("category").value = project.category || "Other";
+    $("thumbnail").value = project.thumbnail_url || "";
+    $("videoUrl").value = project.video_url || "";
+    $("projectUrl").value = project.project_url || "";
+    $("description").value = project.description || "";
+    $("visible").checked = project.is_visible === true;
+
+    $("formHeading").textContent = "Edit Project";
+    $("saveButton").textContent = "Update Project";
+    $("cancelButton").classList.remove("hidden");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  async function deleteProject(project) {
+    if (!(await checkOwner())) return;
+    if (!confirm('Delete "' + project.title + '" permanently?')) return;
+
+    message("listStatus", "Deleting...");
+
+    const { data, error } = await db.from("projects")
+      .delete().eq("id", project.id).select("id");
+
+    if (error) {
+      message("listStatus", "Delete failed: " + error.message);
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      message("listStatus", "Nothing deleted. Check RLS policies.");
+      return;
+    }
+
+    if (editingId === project.id) resetForm();
+    message("listStatus", "Project deleted.");
+    await loadProjects();
+  }
+
+  async function loadProjects() {
+    if (!(await checkOwner())) return;
+    message("listStatus", "Loading projects...");
+
+    const { data, error } = await db.from("projects")
+      .select("id,title,category,thumbnail_url,video_url,project_url,description,is_visible,created_at")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      message("listStatus", "Load failed: " + error.message);
+      return;
+    }
+
+    const list = $("projectList");
+    list.replaceChildren();
+
+    if (!data || data.length === 0) {
+      addText(list, "p", "No projects saved yet.", "muted");
+    } else {
+      for (const project of data) {
+        const card = document.createElement("article");
+        card.className = "project";
+        addText(card, "h3", project.title);
+        addText(card, "p", "Category: " + (project.category || "Other"));
+        addText(card, "p", project.description || "No description", "muted");
+        addText(card, "p", project.is_visible ? "Publicly visible" : "Hidden");
+
+        const edit = addText(card, "button", "Edit");
+        edit.type = "button";
+        edit.addEventListener("click", () => editProject(project));
+
+        const del = addText(card, "button", "Delete", "danger");
+        del.type = "button";
+        del.addEventListener("click", () => deleteProject(project));
+
+        list.appendChild(card);
+      }
+    }
+
+    message("listStatus", (data || []).length + " project(s) loaded.");
+  }
+
+  $("refreshButton").addEventListener("click", loadProjects);
+
+  db.auth.onAuthStateChange((event, session) => {
+    if (event === "SIGNED_OUT" || !session) showLogin();
+  });
+
+  (async function start() {
+    if (
+      SUPABASE_URL === "PASTE_YOUR_PROJECT_URL_HERE" ||
+      !SUPABASE_URL.startsWith("https://")
+    ) {
+      showLogin("Setup needed: add your Supabase Project URL in the code.");
+      return;
+    }
+
+    if (await checkOwner()) await loadProjects();
+  })();
+</script>
+</body>
+</html>
